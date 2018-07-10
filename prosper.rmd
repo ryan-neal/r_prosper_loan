@@ -59,7 +59,7 @@ ggplot(aes(DelinquenciesLast7Years), data=subset(clean_prosper, !is.na(Delinquen
 
 Delinquencies over the last 7 years is even more skewed than amount delinquent. It appears most people do not have delinquencies. Let us log tranform and try again.
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(aes(log1p(DelinquenciesLast7Years)), data=subset(clean_prosper, !is.na(DelinquenciesLast7Years))) + 
   geom_histogram(bins=50)
 
@@ -88,7 +88,7 @@ Now that is interesting! Bank credit appears to be a bi-modal distribution.A ver
 
 Let us look at income range next
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE, fig.width=8}
 labels = c("Not employed", "Not displayed", "$0", "$1-24,999", "$25,000-49,999", "$50,000-74,999", "$75,000-99,999", "$100,000+")
 
 clean_prosper$SortedIncome=factor(clean_prosper$IncomeRange, labels, ordered=TRUE)
@@ -149,20 +149,20 @@ Many of the plots in this data set have a bi-modal distribution with many people
 ### What is/are the main feature(s) of interest in your dataset?
 I am most interested in predicting the interest rate, so BorrowerAPR. 
 
-### What other features in the dataset do you think will help support your \
+### What other features in the dataset do you think will help support your analysis?
 I will examine how credit score, income, past delinquencies, and loan date affect BorrowerAPR
 
 ### Did you create any new variables from existing variables in the dataset?
 I created new variables for loan year and loan day. I also created a variable, SortedIncome, that creates a factor from IncomeRange.
 
-### Of the features you investigated, were there any unusual distributions? \
+### Of the features you investigated, were there any unusual distributions? 
 Oh yes. As touched upon earlier, I expected a normal distribution on most variables. Instead, it appears as if there are a large number of negative (and positive outliers). I will explore this more with bivariate analysis.
 
 
 # Bivariate Plots Section
 
 First, I examined the relationship between Credit Score (Upper bound) and Borrower APR.
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(aes(x=CreditScoreRangeUpper, y=BorrowerAPR), 
        data=subset(clean_prosper, !is.na(CreditScoreRangeUpper))) +
   geom_jitter(alpha=1/20)
@@ -172,7 +172,7 @@ cor.test(clean_prosper$CreditScoreRangeUpper, clean_prosper$BorrowerAPR)
 
 The correlation is around -.4, so there is a moderately strong relationship. However, there are a lot of people with high-credit scores who pay a high APR. I wonder if this is due to a lack of negotiation. Next, I examined stated monthly income to see how it affects BorrowerAPR.
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(aes(x=StatedMonthlyIncome, y=BorrowerAPR), data=clean_prosper) +
   geom_jitter(alpha=1/50) + coord_cartesian(xlim=c(0, 10000))
 
@@ -181,7 +181,7 @@ cor.test(clean_prosper$StatedMonthlyIncome, clean_prosper$BorrowerAPR)
 
 The relationship is not very strong. Let us check out income range. Perhaps that relationship is stronger.
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE, fig.width=7}
 
 ggplot(aes(x=SortedIncome, y=BorrowerAPR, fill=SortedIncome), data=clean_prosper) +
   geom_boxplot()
@@ -191,7 +191,7 @@ ggplot(aes(x=SortedIncome, y=BorrowerAPR, fill=SortedIncome), data=clean_prosper
 This looks a lot better. The weird thing here is $0 income has the lowest median 
 APR. However, I as illustrated in the graph below there are far fewer loans for people with no income. Keeping in mind the small sample size, there appears a steady decreasing trend in borrowing APR as income increases. This is exactly what I would expect.
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width=8}
 income_groups = group_by(clean_prosper, SortedIncome)
 clean_prosper.by_income = summarize(income_groups, 
                                     mean_apr = mean(BorrowerAPR),
@@ -260,7 +260,7 @@ clean_prosper.by_balance = summarize(balance_groups,
 ```{r echo=FALSE}
 ggplot(aes(x=RevolvingCreditBalance, y=median_apr), 
        data=subset(clean_prosper.by_balance, !is.na(RevolvingCreditBalance))) + 
-  geom_point() +
+  geom_point(alpha=1/25) +
   coord_cartesian(xlim=c(0,100000))
 
 ```
@@ -454,11 +454,13 @@ ggplot(aes(x=LoanYear, y=median_apr, color=CreditRange),
 
 There is also an interesting APR trend over time. Improving credit by 100 points leads to a significantly lower APR.
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width=7}
 ggplot(aes(x=SortedIncome, y=BorrowerAPR, color=CreditRange), 
        data=subset(clean_prosper, !is.na(CreditRange))) + 
   geom_jitter(stat="identity", alpha=1/10) +
-  guides(color = guide_legend(override.aes = list(alpha = 1)))
+  guides(color = guide_legend(override.aes = list(alpha = 1)))+
+  scale_color_brewer() + 
+  theme_dark()
 ```
 
 Now this is interesting! It appears unemployed people often have a credit rating around 600-700 to get loans and their interest rate is around .35. We also see a clear decrease in interest rates as income and credit increase.
@@ -523,7 +525,7 @@ ggplot(aes(x=LoanOriginalAmount, y=BorrowerAPR, color=SortedIncome),
 
 And most people who get loans greater than $30,000 have incomes above $100,000. Finally, I compared income and credit range to Borrower APR with debt to income ratio.  
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width=5}
 ggplot(aes(x=SortedIncome, y=DebtToIncomeRatio), 
        data=subset(clean_prosper, 
                    !is.na(SortedIncome) & !is.na(DebtToIncomeRatio))) + 
@@ -563,27 +565,15 @@ looking at your feature(s) of interest?
 
 Credit score and income work well together. Having both will likely lead to a lower APR. Time and credit score and time and income are also interesting relationships. It appears the bank has asked for higher credit scores and incomes as a result of the financial crisis.
 
-### Were there any interesting or surprising interactions between features?
 
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
 
-
-### OPTIONAL: Did you create any models with your dataset? Discuss the \
-strengths and limitations of your model.
-
-One limitation the model is some important variables, such as DebtToIncomeRatio, have no data. Improving the data integrity could increase the model's R squared. The other big limitation is the model only explains 1/3 of the variance. We need to identify features that are not included. For example, how might location play a role? What about occupation? We have both of these features, but did not include them in the model. 
+One limitation of the model is some important variables, such as DebtToIncomeRatio, have no data. Improving the data integrity could increase the model's R squared. The other big limitation is the model only explains 1/3 of the variance. We need to identify features that are not included. For example, how might location play a role? What about occupation? We have both of these features, but did not include them in the model. 
 
 The biggest strength of the model is its simplicity. A banker could bank an approximate decision quickly with only a couple variables.
 ------
 
 # Final Plots and Summary
-
-> **Tip**: You've done a lot of exploration and have built up an understanding
-of the structure of and relationships between the variables in your dataset.
-Here, you will select three plots from all of your previous exploration to
-present here as a summary of some of your most interesting findings. Make sure
-that you have refined your selected plots for good titling, axis labels (with
-units), and good aesthetic choices (e.g. color, transparency). After each plot,
-make sure you justify why you chose each plot by describing what it shows.
 
 ### Plot One
 ```{r echo=FALSE, Plot_One}
@@ -597,7 +587,7 @@ ggplot(aes(x=CreditRange, y=median_apr, fill=SortedIncome), data=subset(clean_pr
 
 ### Description One
 
-I love this graph because it shows two things. First wee see non displayed incomes are all the 400-500 credit scores. I was curious what not displayed meant and this graph provided some information. But it also pains a clear picture of how APR decreases as credit and income increase. For example, someone with an 800+ credit rating who makes greater than $100,000 can expect an interest rate nearly a point lower than someone with the same income and a 700+ credit rating. Interestingly, their interest rate is about the same with someone who has a $75,000+ income and an 800+ credit rating. Reaching an 800+ credit rating is extremely significant.
+This chart displays two things. First wee see non displayed incomes are all the 400-500 credit scores. I was curious what not displayed meant. This graph provides important information. It also paints a clear picture of how APR decreases as credit and income increase. For example, someone with an 800+ credit rating who makes greater than $100,000 can expect an interest rate nearly a point lower than someone with the same income and a 700+ credit rating. Interestingly, their interest rate is about the same with someone who has a $75,000+ income and an 800+ credit rating. Reaching an 800+ credit rating is extremely significant.
 
 
 ### Plot Two
@@ -608,9 +598,10 @@ ggplot(aes(LoanDay), data=clean_prosper) + geom_histogram(binwidth=30, fill="#85
   ylab("Loans Granted") +
   ggtitle("Loans Granted Per Year")
 ```
+
 ### Description Two
 
-I like this chart because it visualises the magnitude of the financial crisis. 2009 barely even registers on the graph. Someone from the future could see this graph and wonder - what happened in 2009? 
+This chart visualizes the financial crisis. 2009 barely even registers on the graph. Someone from the future could see this graph and wonder - what happened in 2009? 
 
 ```{r echo=FALSE}
 clean_prosper$LoanRange = 
@@ -624,7 +615,7 @@ clean_prosper.by_loan_income = summarize(loan_groups,
 
 
 ### Plot Three
-```{r echo=FALSE, Plot_Three}
+```{r echo=FALSE, Plot_Three, fig.width=5}
 labels = c("$0 - $5,000", "$5,000-$10,000", "$10,000-$15,000", "$15,000-$20,000", "$20,000-$25,000", "$25,000-$30,000", "$30,000+")
 
 ggplot(aes(x=LoanRange, y=n), data=clean_prosper.by_loan_income) +
@@ -638,11 +629,12 @@ ggplot(aes(x=LoanRange, y=n), data=clean_prosper.by_loan_income) +
 
 ### Description Three
 
-This chart is interesting because it tells a slighter different story than the first chart. In that chart, it appeared an increase in credit score was more important than an increase in income to lower interest rates. While that might be true, income has a larger effect on the ability to receive loans greater than $20,000 
-------
+This chart tells a slighter different story than the first chart. In that chart, it appeared an increase in credit score was more important than an increase in income to lower interest rates. While that might be true, income has a larger effect on the ability to receive loans greater than $20,000 
 
 # Reflection
 
 The prosper loan dataset contains 11937 observations and 82 variables. I started analyzing the data by exploring the distribution and correlations of different variables in the hopes of predicting a loan recipients interest rate.
 
 I indentified debt to income ratio, loan day, loan amount, credit score, and income as predictive variables of interest rate. From these variables, I was able to build a model that accounts for 33 percent of the variance in APR. I also identified some interesting trends. For example, the bank granted very few loans during the financial crisis. In fact, it appears the financial crisis might have lead to a complete change in strategy for the bank. It offered more loans to higher,verified income individuals with greater than 600 credit scores.
+
+The biggest challenge in analyzing the data set was a lack of context. For example, did the bank actually change strategies in 2010? What lessons did they learn from the financial crisis? An interesting piece of data not yet analyzed is the revenue from different loans (e.g. credit score, income, etc). I am curious how strategic changes affect the bank's
