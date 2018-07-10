@@ -1,7 +1,7 @@
 ---
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 Loan Analysis by Ryan Neal
 ========================================================
@@ -181,7 +181,7 @@ cor.test(clean_prosper$StatedMonthlyIncome, clean_prosper$BorrowerAPR)
 
 The relationship is not very strong. Let us check out income range. Perhaps that relationship is stronger.
 
-```{r echo=FALSE, warning=FALSE, fig.width=7}
+```{r echo=FALSE, warning=FALSE, fig.width=9}
 
 ggplot(aes(x=SortedIncome, y=BorrowerAPR, fill=SortedIncome), data=clean_prosper) +
   geom_boxplot()
@@ -454,7 +454,7 @@ ggplot(aes(x=LoanYear, y=median_apr, color=CreditRange),
 
 There is also an interesting APR trend over time. Improving credit by 100 points leads to a significantly lower APR.
 
-```{r echo=FALSE, fig.width=7}
+```{r echo=FALSE, fig.width=10}
 ggplot(aes(x=SortedIncome, y=BorrowerAPR, color=CreditRange), 
        data=subset(clean_prosper, !is.na(CreditRange))) + 
   geom_jitter(stat="identity", alpha=1/10) +
@@ -525,7 +525,7 @@ ggplot(aes(x=LoanOriginalAmount, y=BorrowerAPR, color=SortedIncome),
 
 And most people who get loans greater than $30,000 have incomes above $100,000. Finally, I compared income and credit range to Borrower APR with debt to income ratio.  
 
-```{r echo=FALSE, fig.width=5}
+```{r echo=FALSE, fig.width=9}
 ggplot(aes(x=SortedIncome, y=DebtToIncomeRatio), 
        data=subset(clean_prosper, 
                    !is.na(SortedIncome) & !is.na(DebtToIncomeRatio))) + 
@@ -615,7 +615,7 @@ clean_prosper.by_loan_income = summarize(loan_groups,
 
 
 ### Plot Three
-```{r echo=FALSE, Plot_Three, fig.width=5}
+```{r echo=FALSE, Plot_Three, fig.width=10}
 labels = c("$0 - $5,000", "$5,000-$10,000", "$10,000-$15,000", "$15,000-$20,000", "$20,000-$25,000", "$25,000-$30,000", "$30,000+")
 
 ggplot(aes(x=LoanRange, y=n), data=clean_prosper.by_loan_income) +
